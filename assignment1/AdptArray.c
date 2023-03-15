@@ -1,5 +1,7 @@
 #include "AdptArray.h"
 #include <stdio.h>
+#include <stdlib.h>
+
 typedef struct AdptArray_{
     // array and its size
     PElement* elements;
@@ -12,7 +14,7 @@ typedef struct AdptArray_{
 } AdptArray;
 
 PAdptArray CreateAdptArray(COPY_FUNC copy_func, DEL_FUNC del_func, PRINT_FUNC print_func) {
-    PAdptArray array = (PAdptArray)malloc(sizeof(AdptArray));
+    PAdptArray array = (PAdptArray) malloc (sizeof(AdptArray));
     if (array == NULL) {
         return NULL; // Error: unable to allocate memory
     }
@@ -27,22 +29,50 @@ PAdptArray CreateAdptArray(COPY_FUNC copy_func, DEL_FUNC del_func, PRINT_FUNC pr
     return array;
 }
 
-void DeleteAdptArray(PAdptArray){
-
+void DeleteAdptArray(PAdptArray array){
+    if(array == NULL){
+        return;
+    }
+    for(int i = 0; i < array -> size; i++){
+        array->del_func(array->elements);
+    }
+    free(array->elements);
+    free(array);
 }
 
-Result SetAdptArrayAt(PAdptArray, int, PElement){
-
+Result SetAdptArrayAt(PAdptArray array, int i, PElement new_element){
+    if(array == NULL){
+        return FAIL;
+    }
+    if(i >= array->size){
+        PElement* tmp = (PElement*) calloc(i, sizeof(PElement));
+        if (tmp == NULL) {
+            return FAIL; // Error: unable to allocate memory
+        }
+        for(int j = 0; j < array->size; j++){
+            tmp[j] = array->elements[j];
+        }
+        free(array->elements);
+        array->elements = tmp;
+    }
+    array->del_func(array->elements[i]);
+    array->elements[i] = array->copy_func(new_element);
+    return SUCCESS;
 }
 
-PElement GetAdptArrayAt(PAdptArray, int){
-
+PElement GetAdptArrayAt(PAdptArray array, int i){
+    return array->copy_func(array->elements[i]);
 }
 
-int GetAdptArraySize(PAdptArray){
-
+int GetAdptArraySize(PAdptArray array){
+    return array->size;
 }
 
-void PrintDB(PAdptArray){
-
+void PrintDB(PAdptArray array){
+    if(array == NULL){
+        return;
+    }
+    for(int i = 0; i < array->size; i++){
+        array->print_func(array->elements);
+    }
 }
