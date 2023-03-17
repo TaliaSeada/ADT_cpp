@@ -33,11 +33,17 @@ void DeleteAdptArray(PAdptArray array){
     if(array == NULL){
         return;
     }
-    for(int i = 0; i < array -> size; i++){
-        array->del_func(array->elements);
-    }
-    free(array->elements);
+    if(array->elements != NULL){
+        for(int i = 0; i < array -> size; i++){
+            if(array->elements[i]){
+                array->del_func(array->elements[i]);
+            }
+        }
+        free(array->elements);
+        array->elements = NULL;
+    }  
     free(array);
+    array = NULL;
 }
 
 Result SetAdptArrayAt(PAdptArray array, int i, PElement new_element){
@@ -45,7 +51,7 @@ Result SetAdptArrayAt(PAdptArray array, int i, PElement new_element){
         return FAIL;
     }
     if(i >= array->size){
-        PElement* tmp = (PElement*) calloc(i, sizeof(PElement));
+        PElement* tmp = (PElement*) calloc(i+1, sizeof(PElement));
         if (tmp == NULL) {
             return FAIL; // Error: unable to allocate memory
         }
@@ -54,13 +60,20 @@ Result SetAdptArrayAt(PAdptArray array, int i, PElement new_element){
         }
         free(array->elements);
         array->elements = tmp;
+        array->size = i + 1; // update size of array
     }
-    array->del_func(array->elements[i]);
-    array->elements[i] = array->copy_func(new_element);
+    if(array->elements[i]){
+        array->del_func((array->elements)[i]); // delete the previous element
+    }
+    (array->elements)[i] = array->copy_func(new_element);
     return SUCCESS;
 }
 
+
 PElement GetAdptArrayAt(PAdptArray array, int i){
+    if(array->size < i || array->elements[i] == NULL){
+        return NULL;
+    }
     return array->copy_func(array->elements[i]);
 }
 
@@ -73,6 +86,8 @@ void PrintDB(PAdptArray array){
         return;
     }
     for(int i = 0; i < array->size; i++){
-        array->print_func(array->elements);
+        if(array->elements[i]){
+            array->print_func(array->elements[i]);
+        }
     }
 }
